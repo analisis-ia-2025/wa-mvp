@@ -1,0 +1,8 @@
+﻿fastapi
+uvicorn
+python-dotenv
+httpx
+SQLAlchemy
+babel
+fpdf2
+openai>=1.40.0
