@@ -543,15 +543,22 @@ async def receive_webhook(req: Request):
             )
             return JSONResponse({"status": "deleted"}, status_code=200)
 
+        
         # ------------------------------------------------------------
         # Flujo de consentimiento explícito + identidad negocio
         # ------------------------------------------------------------
         consent_status = get_ctx(wa_from, "consent_status", None)
         if consent_status != "granted":
-            if any(
-                token in lower_text
-                for token in ("si", "sí", "acepto", "autorizo", "de acuerdo", "ok, acepto")
-            ):
+            # Aceptación explícita: evitamos falsos positivos (por ejemplo, palabras que contengan "si")
+            accept_patterns = [
+                r"\bsi\b",
+                r"\bsí\b",
+                r"\bacepto\b",
+                r"\bautorizo\b",
+                r"\bde acuerdo\b",
+                r"\bok[, ]*acepto\b",
+            ]
+            if any(re.search(p, lower_text) for p in accept_patterns):
                 set_ctx(wa_from, "consent_status", "granted")
                 lines = [
                     f"✅ Gracias. Desde ahora {BOT_NAME} puede analizar tus datos de salud de forma automatizada.",
@@ -570,6 +577,7 @@ async def receive_webhook(req: Request):
                 await send_text(wa_from, "\n".join(lines))
                 return JSONResponse({"status": "consent_granted"}, status_code=200)
 
+            # Si aún no ha otorgado consentimiento, mostramos el texto de información y pedimos confirmación
             lines = [
                 f"👋 Hola, soy {BOT_NAME}, un asistente automatizado para ayudarte a entender tus exámenes y dudas de salud.",
             ]
@@ -578,8 +586,14 @@ async def receive_webhook(req: Request):
             lines.extend(
                 [
                     "",
-                    "Antes de continuar necesito tu autorización para procesar *datos sensibles de salud*.",
-                    "Usaré esta información solo para darte una orientación general basada en lo que me compartes.",
+                    "Para poder ayudarte, necesito procesar algunos datos de salud que me compartas (síntomas, "
+                    "resultados de exámenes, imágenes legibles de informes, etc.).",
+                    "",
+                    "🔒 La información que compartas se utilizará solo para entregarte una orientación general "
+                    "y puede almacenarse temporalmente para mejorar la continuidad de la conversación.",
+                    "",
+                    "Esta orientación NO reemplaza una consulta médica presencial ni constituye un diagnóstico "
+                    "ni una indicación de tratamiento.",
                 ]
             )
             if PRIVACY_URL:
@@ -601,6 +615,7 @@ async def receive_webhook(req: Request):
             await send_text(wa_from, "\n".join(lines))
             set_ctx(wa_from, "consent_status", "pending")
             return JSONResponse({"status": "consent_required"}, status_code=200)
+
 
         # ------------------------------------------------------------
         # Acciones directas del usuario para PDF (comando explícito)
