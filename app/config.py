@@ -29,7 +29,6 @@ META_WA_VERIFY_TOKEN = (
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL")  # ej. https://drmax.midominio.cl
 
 # Branding opcional
-BOT_NAME = os.getenv("DRIA_BOT_NAME", "DR MAX SALUD")
 BUSINESS_NAME = os.getenv("DRIA_BUSINESS_NAME", "DR MAX SALUD")
 PRIVACY_URL = os.getenv("DRIA_PRIVACY_URL")
 CONTACT_EMAIL = os.getenv("DRIA_CONTACT_EMAIL", "")
@@ -51,11 +50,7 @@ USE_LLM = os.getenv("USE_LLM", "false").lower() in ("1", "true", "yes")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
-# Mensajería clínica
-DISCLAIMER = (
-    "Este servicio es informativo y NO reemplaza la atención médica presencial. "
-    "Si presentas síntomas de urgencia, acude a un servicio de emergencia."
-)
+
 EMERGENCY_SIGNS = [
     "dolor fuerte en el pecho", "opresión torácica", "falta de aire severa",
     "dificultad para respirar", "debilidad de un lado del cuerpo",
@@ -73,3 +68,30 @@ def _as_bool(v: str | None, default: bool = False) -> bool:
 
 # Nuevo: controlar si guardamos media a disco (fallback)
 MEDIA_SAVE_TO_DISK = _as_bool(os.getenv("MEDIA_SAVE_TO_DISK"), default=False)
+
+
+# ============================================================
+# Branding / negocio / cumplimiento de políticas de negocio
+# ============================================================
+
+# Nombre "amigable" del bot (cara visible al usuario)
+BOT_NAME = os.getenv("DRIA_BOT_NAME", APP_NAME if "APP_NAME" in globals() else "DR MAX SALUD")
+
+
+
+BUSINESS_CONTACT_EMAIL = os.getenv("DRIA_CONTACT_EMAIL", "")
+BUSINESS_CONTACT_PHONE = os.getenv("DRIA_CONTACT_PHONE", "")
+
+# Aviso estándar que debe aparecer (o estar disponible) en las respuestas
+DISCLAIMER = os.getenv(
+    "DRIA_DISCLAIMER",
+    "Aviso: Esta orientación es general y no reemplaza una consulta médica presencial con un profesional de la salud."
+)
+
+# Mensaje para casos de urgencia (Sensitive Use – D)
+EMERGENCY_HINT = os.getenv(
+    "DRIA_EMERGENCY_HINT",
+    "Si presentas síntomas de gravedad (dolor en el pecho, dificultad para respirar, pérdida de conciencia, "
+    "síntomas neurológicos agudos, sangrado abundante u otra situación de emergencia), acude de inmediato a un "
+    "servicio de urgencias o llama al número de emergencias de tu país."
+)
